@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environments
+venv/
+.venv/
+
+# Environment variables
+.env
+
+# Logs
+logs/
+*.log
+
+# Data
+data/
+datasets/
+*.csv
+*.json
+
+# Model artifacts
+models/
+*.pt
+*.pth
+*.pkl
+
+# Vector DB
+faiss_index/
+chroma_db/
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
