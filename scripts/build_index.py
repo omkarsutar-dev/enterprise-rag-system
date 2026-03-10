@@ -1,22 +1,23 @@
 from app.services.ingestion import load_documents
 from app.services.embeddings import get_embedding
-from app.services.vector_store import create_faiss_index, save_index
-from app.services.retriever import initialize_keyword_search
+from app.services.vector_store import create_index, save_index
 
+# tenant_id = "company_a"
+tenant_id = input("Enter Tenant ID : ")
 
-documents = load_documents()
+documents = load_documents(tenant_id)
 
 embeddings = []
 metadata = []
 
 for doc in documents:
+
     embedding = get_embedding(doc["text"])
     embeddings.append(embedding)
     metadata.append(doc)
 
-index = create_faiss_index(embeddings)
-save_index(index, metadata)
+index = create_index(embeddings)
 
-# initialize_keyword_search(documents)
+save_index(index, metadata, tenant_id)
 
-print("Index built successfully.")
+print("Index built successfully")

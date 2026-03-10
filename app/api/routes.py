@@ -6,7 +6,7 @@ from app.services.llm_service import generate_answer
 router = APIRouter()
 
 @router.post("/query", response_model=QueryResponse)
-def query_rag(request: QueryRequest):
-    results = hybrid_search(request.query)
-    answer = generate_answer(request.query, results)
-    return QueryResponse(answer=answer)
+def query(request: QueryRequest):
+    chunks = hybrid_search(request.query, request.tenant_id)
+    answer = generate_answer(request.query, chunks)
+    return {"answer": answer}
