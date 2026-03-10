@@ -3,6 +3,7 @@ from app.services.embeddings import get_embedding
 from app.services.vector_store import create_faiss_index, save_index
 from app.services.retriever import initialize_keyword_search
 
+
 documents = load_documents()
 
 embeddings = []
@@ -16,6 +17,6 @@ for doc in documents:
 index = create_faiss_index(embeddings)
 save_index(index, metadata)
 
-initialize_keyword_search(documents)
+# initialize_keyword_search(documents)
 
 print("Index built successfully.")

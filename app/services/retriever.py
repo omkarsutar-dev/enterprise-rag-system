@@ -8,11 +8,13 @@ index, metadata = load_index()
 vectorizer = None
 tfidf_matrix = None
 
-def initialize_keyword_search(docs):
+def initialize_keyword_search():
     global vectorizer, tfidf_matrix
-    texts = [doc["text"] for doc in docs]
+    texts = [doc["text"] for doc in metadata]
     vectorizer = TfidfVectorizer()
     tfidf_matrix = vectorizer.fit_transform(texts)
+
+initialize_keyword_search()
 
 def hybrid_search(query, top_k=5):
     # Semantic search
