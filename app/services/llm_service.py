@@ -1,14 +1,18 @@
 from openai import OpenAI
-from app.config import OPENAI_API_KEY, LLM_MODEL
+from app.config import OPENAI_API_KEY
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-def generate_answer(query, context_chunks):
-    context = "\n\n".join([chunk["text"] for chunk in context_chunks])
+
+def generate_answer(query, documents):
+
+    context = ""
+
+    for doc in documents:
+        context += doc["text"] + "\n"
 
     prompt = f"""
-    You are an enterprise AI assistant.
-    Answer strictly based on the provided context.
+    Answer the question based on the context below.
 
     Context:
     {context}
@@ -18,12 +22,8 @@ def generate_answer(query, context_chunks):
     """
 
     response = client.chat.completions.create(
-        model=LLM_MODEL,
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": prompt}
-        ],
-        temperature=0.2
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}]
     )
 
     return response.choices[0].message.content

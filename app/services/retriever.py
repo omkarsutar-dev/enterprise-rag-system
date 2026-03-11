@@ -22,7 +22,7 @@ def initialize_tenant(tenant_id):
     tfidf_matrices[tenant_id] = tfidf_matrix
 
 
-def hybrid_search(query, tenant_id, top_k=5):
+def hybrid_search(query, tenant_id, top_k=20):
 
     if tenant_id not in indexes:
         initialize_tenant(tenant_id)

@@ -35,3 +35,6 @@ chroma_db/
 # IDE
 .vscode/
 .idea/
+
+# notes
+notes.txt
