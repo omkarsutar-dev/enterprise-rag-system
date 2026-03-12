@@ -18,12 +18,20 @@ data/
 datasets/
 *.csv
 *.json
+*.pdf
+
+# Uploads
+uploads/
+*.csv
+*.json
+*.pdf
 
 # Model artifacts
 models/
 *.pt
 *.pth
 *.pkl
+*.bin
 
 # Vector DB
 faiss_index/

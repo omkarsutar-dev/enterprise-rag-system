@@ -1,33 +1,44 @@
-# Enterprise Multi-Tenant RAG System
+# Enterprise Multi-Tenant RAG Platform
 
-A **production-oriented Retrieval Augmented Generation (RAG) platform** designed to answer questions from enterprise documents with **high accuracy, low latency, and tenant-level data isolation**.
+A production-style **Retrieval Augmented Generation (RAG) system** that enables organizations to query internal documents using LLMs with **hybrid retrieval, reranking, and dynamic document ingestion**.
 
-This project demonstrates how modern AI systems combine **vector search, hybrid retrieval, and LLMs** to build scalable enterprise knowledge assistants.
+This project demonstrates how modern AI systems combine **vector search, keyword search, and cross-encoder reranking** to build scalable enterprise knowledge assistants.
 
 ---
 
 ## 🚀 Key Features
 
-* **Multi-Tenant Architecture** – isolated vector indexes per organization
-* **Hybrid Retrieval** – semantic search (embeddings) + keyword search
-* **Vector Database** – FAISS for high-performance similarity search
-* **Chunking Pipeline** – optimized document segmentation with overlap
-* **LLM Response Generation** – contextual answers grounded in retrieved documents
-* **FastAPI Backend** – scalable API layer for AI services
+* **Multi-Tenant Architecture** – isolated knowledge base for each organization
+* **Hybrid Retrieval** – semantic search + keyword search
+* **Cross-Encoder Reranking** – improves document relevance
+* **Dynamic Document Upload** – upload PDFs/TXT via API
+* **Automatic Indexing Pipeline** – chunking → embeddings → vector index update
+* **Vector Search** – FAISS for high-performance similarity search
+* **FastAPI Backend** – scalable AI service layer
 
 ---
 
-## 🏗 System Architecture
+## 🧠 System Pipeline
+
+User Upload Document
+↓
+Text Extraction (PDF/TXT)
+↓
+Chunking with Overlap
+↓
+Embedding Generation
+↓
+FAISS Vector Index Update
 
 User Query
 ↓
-Hybrid Retrieval (Semantic + Keyword Search)
+Hybrid Retrieval (Semantic + Keyword)
 ↓
-Top Relevant Chunks
+Reranking Model
 ↓
-LLM Context Generation
+Top Context Chunks
 ↓
-Final Answer
+LLM Answer Generation
 
 ---
 
@@ -37,15 +48,16 @@ Final Answer
 enterprise-rag/
 
 app/
- ├── api/                # API routes
- ├── services/           # Retrieval, embeddings, LLM services
- ├── models/             # Request/response schemas
- ├── core/               # Tenant management
- └── utils/              # Chunking utilities
+ ├── api/            # FastAPI routes
+ ├── core/           # Tenant management
+ ├── models/         # API schemas
+ ├── services/       # Retrieval, reranking, ingestion, LLM
+ └── utils/          # Chunking and file parsing
 
-data/                    # Tenant documents
-vector_store/            # FAISS indexes
-scripts/                 # Index building scripts
+uploads/             # Uploaded documents
+data/                # Tenant data
+vector_store/        # FAISS vector indexes
+scripts/             # Index build scripts
 ```
 
 ---
@@ -54,40 +66,35 @@ scripts/                 # Index building scripts
 
 * Python
 * FastAPI
-* FAISS
+* FAISS (Vector Database)
 * OpenAI Embeddings
-* Scikit-Learn
-* NumPy
+* Sentence Transformers (Reranker)
+* Scikit-Learn (Keyword Search)
+* PyPDF (Document Parsing)
 
 ---
 
 ## ▶️ Running the Project
 
-Install dependencies:
+Install dependencies
 
 ```
 pip install -r requirements.txt
 ```
 
-Add your API key in `.env`:
+Add OpenAI API key
 
 ```
-OPENAI_API_KEY=your_key
+OPENAI_API_KEY=your_api_key
 ```
 
-Build document index:
-
-```
-python scripts/build_index.py
-```
-
-Run the API server:
+Run the API server
 
 ```
 uvicorn app.main:app --reload
 ```
 
-Open API docs:
+Open API documentation
 
 ```
 http://localhost:8000/docs
@@ -99,24 +106,22 @@ http://localhost:8000/docs
 
 * Enterprise knowledge assistants
 * Internal documentation search
-* Policy / HR Q&A systems
+* HR policy Q&A systems
 * AI copilots for organizations
 
 ---
 
-## 🔮 Future Improvements
+## 🔮 Next Improvements
 
-* Reranking models for better retrieval precision
+* Asynchronous document indexing
+* Query caching
 * Metadata filtering
-* Streaming responses
-* Cloud deployment on AWS
-* Monitoring and evaluation pipelines
+* Evaluation metrics
+* Cloud deployment
 
 ---
 
 ## 👨‍💻 Author
 
-**Omkar Sutar**
-Python Developer | Generative AI Engineer
-
-Focused on building **Scalable AI systems and production-ready LLM applications**.
+Omkar Sutar
+Python Developer →  Generative AI Engineer

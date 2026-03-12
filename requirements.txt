@@ -7,3 +7,5 @@ numpy
 scikit-learn
 pydantic
 sentence-transformers
+pypdf
+python-multipart
