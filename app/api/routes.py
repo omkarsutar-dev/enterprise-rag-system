@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from fastapi import APIRouter, UploadFile, File, Form, BackgroundTasks
 from app.models.schemas import QueryRequest, QueryResponse
 from app.services.retriever import hybrid_search
 from app.services.reranker import rerank
@@ -33,6 +34,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @router.post("/upload")
 async def upload_document(
+        background_tasks: BackgroundTasks,
         tenant_id: str = Form(...),
         file: UploadFile = File(...)
 ):
@@ -42,6 +44,9 @@ async def upload_document(
     with open(file_path, "wb") as f:
         f.write(await file.read())
 
-    process_upload(file_path, tenant_id)
+    # Run ingestion in background
+    background_tasks.add_task(process_upload, file_path, tenant_id)
 
-    return {"message": "Document uploaded and indexed successfully"}
+    return {
+        "message": "Document uploaded. Indexing started in background."
+    }
