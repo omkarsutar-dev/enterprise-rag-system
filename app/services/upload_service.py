@@ -9,7 +9,7 @@ from app.services.vector_store import load_index, save_index, create_index
 from app.core.tenant_manager import get_index_path
 
 
-def process_upload(file_path, tenant_id):
+def process_upload(file_path, tenant_id, department):
 
     text = extract_text(file_path)
 
@@ -28,12 +28,12 @@ def process_upload(file_path, tenant_id):
             "tenant_id": tenant_id,
             "chunk_id": str(uuid.uuid4()),
             "text": chunk,
-            "source": os.path.basename(file_path)
+            "source": os.path.basename(file_path),
+            "department": department   # ✅ dynamic metadata
         })
 
     embeddings = np.array(embeddings).astype("float32")
 
-    #  Check if tenant index exists
     if os.path.exists(get_index_path(tenant_id)):
 
         index, existing_metadata = load_index(tenant_id)
@@ -46,7 +46,6 @@ def process_upload(file_path, tenant_id):
 
     else:
 
-        # 🔹 Create new index for first document
         index = create_index(embeddings)
 
         save_index(index, metadata, tenant_id)

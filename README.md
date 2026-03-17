@@ -15,6 +15,8 @@ This project demonstrates how modern AI systems combine **vector search, keyword
 * **Automatic Indexing Pipeline** – chunking → embeddings → vector index update
 * **Vector Search** – FAISS for high-performance similarity search
 * **FastAPI Backend** – scalable AI service layer
+* **Background Tasks** - Asynchronous document ingestion using background tasks
+* **Metadata Filtering** - Metadata-based filtering in the retrieval layer
 
 ---
 
@@ -113,9 +115,7 @@ http://localhost:8000/docs
 
 ## 🔮 Next Improvements
 
-* Asynchronous document indexing
 * Query caching
-* Metadata filtering
 * Evaluation metrics
 * Cloud deployment
 
