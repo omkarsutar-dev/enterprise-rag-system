@@ -17,6 +17,7 @@ This project demonstrates how modern AI systems combine **vector search, keyword
 * **FastAPI Backend** – scalable AI service layer
 * **Background Tasks** - Asynchronous document ingestion using background tasks
 * **Metadata Filtering** - Metadata-based filtering in the retrieval layer
+* **Redis-based query caching** - Avoid redundant LLM calls, significantly reducing latency and cost for repeated queries.
 
 ---
 
@@ -115,7 +116,6 @@ http://localhost:8000/docs
 
 ## 🔮 Next Improvements
 
-* Query caching
 * Evaluation metrics
 * Cloud deployment
 

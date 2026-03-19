@@ -6,6 +6,12 @@ from app.services.upload_service import process_upload
 from app.services.retriever import hybrid_search
 from app.services.reranker import rerank
 from app.services.llm_service import generate_answer
+from app.services.cache_service import (
+    generate_cache_key,
+    get_cached_response,
+    set_cached_response
+)
+
 
 router = APIRouter()
 
@@ -48,6 +54,20 @@ def query(request: QueryRequest):
         "source": request.source
     }
 
+    # ✅ Step 1: Generate cache key
+    cache_key = generate_cache_key(
+        request.tenant_id,
+        request.query,
+        filters
+    )
+
+    # ✅ Step 2: Check cache
+    cached = get_cached_response(cache_key)
+
+    if cached:
+        return {"answer": cached}
+
+    # ✅ Step 3: Retrieve
     chunks = hybrid_search(
         request.query,
         request.tenant_id,
@@ -55,8 +75,13 @@ def query(request: QueryRequest):
         top_k=20
     )
 
+    # ✅ Step 4: Rerank
     reranked = rerank(request.query, chunks, top_k=5)
 
+    # ✅ Step 5: LLM
     answer = generate_answer(request.query, reranked)
+
+    # ✅ Step 6: Store in cache
+    set_cached_response(cache_key, answer)
 
     return {"answer": answer}
