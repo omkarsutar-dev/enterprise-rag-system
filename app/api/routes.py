@@ -1,11 +1,13 @@
 from fastapi import APIRouter, UploadFile, File, Form, BackgroundTasks
 import os
-
+from fastapi.responses import StreamingResponse
 from app.models.schemas import QueryRequest, QueryResponse
 from app.services.upload_service import process_upload
 from app.services.retriever import hybrid_search
 from app.services.reranker import rerank
 from app.services.llm_service import generate_answer
+from app.services.llm_service import generate_streaming_answer
+
 from app.services.cache_service import (
     generate_cache_key,
     get_cached_response,
@@ -95,3 +97,59 @@ def query(request: QueryRequest):
     set_cached_response(cache_key, answer)
 
     return {"answer": answer}
+
+
+@router.post("/query-stream")
+def query_stream(request: QueryRequest):
+
+    filters = {
+        "department": request.department,
+        "source": request.source
+    }
+
+    cache_key = generate_cache_key(
+        request.tenant_id,
+        request.query,
+        filters
+    ) + f":session={request.session_id}"
+
+    # ✅ Check cache first
+    cached = get_cached_response(cache_key)
+
+    def stream_generator():
+
+        # 🔥 CASE 1: Cache hit
+        if cached:
+            yield cached
+            return
+
+        # 🔥 CASE 2: Cache miss
+        history = get_chat_history(request.session_id)
+
+        chunks = hybrid_search(
+            request.query,
+            request.tenant_id,
+            filters=filters,
+            top_k=20
+        )
+
+        reranked = rerank(request.query, chunks, top_k=5)
+
+        full_answer = ""
+
+        for token in generate_streaming_answer(
+            request.query,
+            reranked,
+            history
+        ):
+            full_answer += token
+            yield token
+
+        # Save memory
+        append_message(request.session_id, "user", request.query)
+        append_message(request.session_id, "assistant", full_answer)
+
+        # Save cache
+        set_cached_response(cache_key, full_answer)
+
+    return StreamingResponse(stream_generator(), media_type="text/plain")
