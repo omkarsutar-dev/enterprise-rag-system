@@ -11,6 +11,10 @@ from app.services.cache_service import (
     get_cached_response,
     set_cached_response
 )
+from app.services.memory_service import (
+    get_chat_history,
+    append_message
+)
 
 
 router = APIRouter()
@@ -54,20 +58,22 @@ def query(request: QueryRequest):
         "source": request.source
     }
 
-    # ✅ Step 1: Generate cache key
+    # ✅ Cache key includes session
     cache_key = generate_cache_key(
         request.tenant_id,
         request.query,
         filters
-    )
+    ) + f":session={request.session_id}"
 
-    # ✅ Step 2: Check cache
     cached = get_cached_response(cache_key)
 
     if cached:
         return {"answer": cached}
 
-    # ✅ Step 3: Retrieve
+    # ✅ Get chat history
+    history = get_chat_history(request.session_id)
+
+    # ✅ Retrieval
     chunks = hybrid_search(
         request.query,
         request.tenant_id,
@@ -75,13 +81,17 @@ def query(request: QueryRequest):
         top_k=20
     )
 
-    # ✅ Step 4: Rerank
+    # ✅ Rerank
     reranked = rerank(request.query, chunks, top_k=5)
 
-    # ✅ Step 5: LLM
-    answer = generate_answer(request.query, reranked)
+    # ✅ LLM with memory
+    answer = generate_answer(request.query, reranked, history)
 
-    # ✅ Step 6: Store in cache
+    # ✅ Save conversation
+    append_message(request.session_id, "user", request.query)
+    append_message(request.session_id, "assistant", answer)
+
+    # ✅ Cache
     set_cached_response(cache_key, answer)
 
     return {"answer": answer}

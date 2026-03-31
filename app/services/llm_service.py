@@ -4,26 +4,36 @@ from app.config import OPENAI_API_KEY
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 
-def generate_answer(query, documents):
+def generate_answer(query, context_chunks, history):
 
-    context = ""
+    context = "\n".join([c["text"] for c in context_chunks])
 
-    for doc in documents:
-        context += doc["text"] + "\n"
+    messages = []
 
-    prompt = f"""
-    Answer the question based on the context below.
+    # Add history
+    for msg in history:
+        messages.append({
+            "role": msg["role"],
+            "content": msg["content"]
+        })
 
-    Context:
-    {context}
+    # Add current query with context
+    messages.append({
+        "role": "user",
+        "content": f"""
+Use the context below to answer:
 
-    Question:
-    {query}
-    """
+Context:
+{context}
+
+Question:
+{query}
+"""
+    })
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}]
+        messages=messages
     )
 
     return response.choices[0].message.content

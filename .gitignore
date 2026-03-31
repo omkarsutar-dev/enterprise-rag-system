@@ -46,3 +46,7 @@ chroma_db/
 
 # notes
 notes.txt
+
+# Docker file
+Dockerfile
+*.yml
