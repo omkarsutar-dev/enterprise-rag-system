@@ -10,3 +10,4 @@ sentence-transformers
 pypdf
 python-multipart
 redis
+sentence-transformers

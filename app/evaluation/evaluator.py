@@ -37,10 +37,8 @@ def evaluate_system(tenant_id):
         
         # chunks = hybrid_search(query, tenant_id, top_k=5)
 
-        
-
         # Rerank
-        reranked = rerank(query, chunks, top_k=5)
+        reranked = rerank(query, chunks, top_k=3)
 
         # Retrieval
         retrieved_texts = [c["text"] for c in reranked]

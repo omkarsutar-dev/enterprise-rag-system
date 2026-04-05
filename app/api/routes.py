@@ -8,9 +8,8 @@ from app.services.reranker import rerank
 from app.services.llm_service import generate_answer
 from app.services.llm_service import generate_streaming_answer
 from app.evaluation.evaluator import evaluate_system
-
-
-
+from app.models.schemas import FeedbackRequest
+from app.services.feedback_service import save_feedback
 from app.services.cache_service import (
     generate_cache_key,
     get_cached_response,
@@ -27,6 +26,13 @@ router = APIRouter()
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+
+@router.post("/feedback")
+def submit_feedback(request: FeedbackRequest):
+
+    save_feedback(request.dict())
+
+    return {"message": "Feedback saved successfully"}
 
 # ✅ Upload API (with dynamic metadata)
 @router.post("/upload")

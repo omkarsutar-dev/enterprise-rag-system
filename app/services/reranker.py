@@ -1,22 +1,25 @@
 from sentence_transformers import CrossEncoder
 
-# Load reranker model
-model = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
+# Load model once (global)
+cross_encoder = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
 
 
-def rerank(query, documents, top_k=5):
+def rerank(query, chunks, top_k=3):
 
-    pairs = []
+    if not chunks:
+        return []
 
-    for doc in documents:
-        pairs.append((query, doc["text"]))
+    # Create pairs (query, chunk_text)
+    pairs = [(query, c["text"]) for c in chunks]
 
-    scores = model.predict(pairs)
+    # Get scores
+    scores = cross_encoder.predict(pairs)
 
-    scored_docs = list(zip(documents, scores))
+    # Attach scores
+    for i, chunk in enumerate(chunks):
+        chunk["score"] = float(scores[i])
 
-    scored_docs.sort(key=lambda x: x[1], reverse=True)
+    # Sort by score (descending)
+    ranked = sorted(chunks, key=lambda x: x["score"], reverse=True)
 
-    reranked = [doc for doc, score in scored_docs]
-
-    return reranked[:top_k]
+    return ranked[:top_k]
