@@ -7,6 +7,9 @@ from app.services.retriever import hybrid_search
 from app.services.reranker import rerank
 from app.services.llm_service import generate_answer
 from app.services.llm_service import generate_streaming_answer
+from app.evaluation.evaluator import evaluate_system
+
+
 
 from app.services.cache_service import (
     generate_cache_key,
@@ -153,3 +156,23 @@ def query_stream(request: QueryRequest):
         set_cached_response(cache_key, full_answer)
 
     return StreamingResponse(stream_generator(), media_type="text/plain")
+
+
+
+@router.get("/evaluate")
+def evaluate(tenant_id: str):
+
+    results = evaluate_system(tenant_id)
+
+    avg_precision = sum(r["precision"] for r in results) / len(results)
+    avg_recall = sum(r["recall"] for r in results) / len(results)
+    avg_em = sum(r["exact_match"] for r in results) / len(results)
+    avg_latency = sum(r["latency"] for r in results) / len(results)
+
+    return {
+        "avg_precision": avg_precision,
+        "avg_recall": avg_recall,
+        "avg_exact_match": avg_em,
+        "avg_latency": avg_latency,
+        "details": results
+    }
