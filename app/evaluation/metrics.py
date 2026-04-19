@@ -9,16 +9,16 @@ def is_relevant(retrieved_text, relevant_docs):
     return False
 
 
-def precision_at_k(retrieved, relevant, k=5):
+def precision_at_k(retrieved, relevant, k=3):
 
     retrieved_k = retrieved[:k]
 
     hits = sum(1 for doc in retrieved_k if is_relevant(doc, relevant))
 
-    return hits / k
+    return hits / len(retrieved_k) if retrieved_k else 0
 
 
-def recall_at_k(retrieved, relevant, k=5):
+def recall_at_k(retrieved, relevant, k=3):
 
     retrieved_k = retrieved[:k]
 

@@ -1,14 +1,13 @@
 from fastapi import APIRouter, UploadFile, File, Form, BackgroundTasks
 import os
 from fastapi.responses import StreamingResponse
-from app.models.schemas import QueryRequest, QueryResponse
+
+from app.models.schemas import QueryRequest, QueryResponse, FeedbackRequest
 from app.services.upload_service import process_upload
 from app.services.retriever import hybrid_search
 from app.services.reranker import rerank
-from app.services.llm_service import generate_answer
-from app.services.llm_service import generate_streaming_answer
+from app.services.llm_service import generate_answer, generate_streaming_answer
 from app.evaluation.evaluator import evaluate_system
-from app.models.schemas import FeedbackRequest
 from app.services.feedback_service import save_feedback
 from app.services.cache_service import (
     generate_cache_key,
@@ -19,7 +18,10 @@ from app.services.memory_service import (
     get_chat_history,
     append_message
 )
-
+from app.services.confidence_service import (
+    calculate_confidence,
+    is_confident
+)
 
 router = APIRouter()
 
@@ -27,19 +29,32 @@ UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
+# -------------------------------
+# 🔹 Utility: Dynamic Threshold
+# -------------------------------
+def dynamic_threshold(query: str):
+    if len(query.split()) < 4:
+        return 0.7
+    return 0.6
+
+
+# -------------------------------
+# 🔹 Feedback API
+# -------------------------------
 @router.post("/feedback")
 def submit_feedback(request: FeedbackRequest):
-
     save_feedback(request.dict())
-
     return {"message": "Feedback saved successfully"}
 
-# ✅ Upload API (with dynamic metadata)
+
+# -------------------------------
+# 🔹 Upload API
+# -------------------------------
 @router.post("/upload")
 async def upload_document(
         background_tasks: BackgroundTasks,
         tenant_id: str = Form(...),
-        department: str = Form(...),   # dynamic
+        department: str = Form(...),
         file: UploadFile = File(...)
 ):
 
@@ -60,28 +75,33 @@ async def upload_document(
     }
 
 
-# ✅ Query API (with filters)
+# -------------------------------
+# 🔹 Query API
+# -------------------------------
 @router.post("/query", response_model=QueryResponse)
 def query(request: QueryRequest):
 
-    filters = {
-        "department": request.department,
-        "source": request.source
-    }
+    filters = {}
 
-    # ✅ Cache key includes session
+    if request.department and request.department.lower() not in ["", "all", "none"]:
+        filters["department"] = request.department
+
+    if request.source and request.source.lower() not in ["", "all", "none"]:
+        filters["source"] = request.source
+
     cache_key = generate_cache_key(
         request.tenant_id,
         request.query,
         filters
     ) + f":session={request.session_id}"
 
+    # ✅ Cache check
     cached = get_cached_response(cache_key)
-
     if cached:
-        return {"answer": cached}
+        print("It's Cached reponse.")
+        return cached
 
-    # ✅ Get chat history
+    # ✅ Chat history
     history = get_chat_history(request.session_id)
 
     # ✅ Retrieval
@@ -92,22 +112,62 @@ def query(request: QueryRequest):
         top_k=20
     )
 
-    # ✅ Rerank
-    reranked = rerank(request.query, chunks, top_k=5)
+    print(f"Chunks BEFORE rerank: {len(chunks)}")
 
-    # ✅ LLM with memory
+    # ✅ Rerank
+    reranked = rerank(request.query, chunks, top_k=3)
+    print(f"Chunks after rerank: {len(reranked)}")
+
+    # ❌ No chunks found
+    if not reranked:
+        response = {
+            "answer": "No relevant information found.",
+            "confidence": 0.0,
+            "source": []
+        }
+        set_cached_response(cache_key, response)
+        return response
+
+    # ✅ Confidence
+    confidence = calculate_confidence(reranked)
+    threshold = dynamic_threshold(request.query)
+
+    print(f"Query: {request.query}")
+    print(f"Confidence: {confidence}, Threshold: {threshold}")
+    print(f"Chunks: {len(reranked)}")
+
+    # ❌ Low confidence
+    if not is_confident(confidence, threshold):
+        response = {
+            "answer": "I don’t have enough information to answer this question.",
+            "confidence": confidence,
+            "source": []
+        }
+        set_cached_response(cache_key, response)
+        return response
+
+    # ✅ Generate answer
     answer = generate_answer(request.query, reranked, history)
 
-    # ✅ Save conversation
+    response = {
+        "answer": answer,
+        "confidence": confidence,
+        "source": reranked
+    }
+
+    # ✅ Save memory
     append_message(request.session_id, "user", request.query)
     append_message(request.session_id, "assistant", answer)
 
-    # ✅ Cache
-    set_cached_response(cache_key, answer)
+    # ✅ Cache full response
+    set_cached_response(cache_key, response)
 
-    return {"answer": answer}
+    return response
 
 
+# -------------------------------
+# 🔹 Streaming Query API
+# -------------------------------
 @router.post("/query-stream")
 def query_stream(request: QueryRequest):
 
@@ -122,17 +182,15 @@ def query_stream(request: QueryRequest):
         filters
     ) + f":session={request.session_id}"
 
-    # ✅ Check cache first
     cached = get_cached_response(cache_key)
 
     def stream_generator():
 
-        # 🔥 CASE 1: Cache hit
+        # ✅ Cache hit
         if cached:
-            yield cached
+            yield cached["answer"]
             return
 
-        # 🔥 CASE 2: Cache miss
         history = get_chat_history(request.session_id)
 
         chunks = hybrid_search(
@@ -142,7 +200,20 @@ def query_stream(request: QueryRequest):
             top_k=20
         )
 
-        reranked = rerank(request.query, chunks, top_k=5)
+        reranked = rerank(request.query, chunks, top_k=3)
+
+        if not reranked:
+            yield "No relevant information found."
+            return
+
+        confidence = calculate_confidence(reranked)
+        threshold = dynamic_threshold(request.query)
+
+        yield f"[CONFIDENCE:{round(confidence, 2)}]\n"
+
+        if not is_confident(confidence, threshold):
+            yield "I don’t have enough information to answer this question."
+            return
 
         full_answer = ""
 
@@ -154,17 +225,23 @@ def query_stream(request: QueryRequest):
             full_answer += token
             yield token
 
-        # Save memory
+        # ✅ Save memory
         append_message(request.session_id, "user", request.query)
         append_message(request.session_id, "assistant", full_answer)
 
-        # Save cache
-        set_cached_response(cache_key, full_answer)
+        # ✅ Cache
+        set_cached_response(cache_key, {
+            "answer": full_answer,
+            "confidence": confidence,
+            "source": reranked
+        })
 
     return StreamingResponse(stream_generator(), media_type="text/plain")
 
 
-
+# -------------------------------
+# 🔹 Evaluation API
+# -------------------------------
 @router.get("/evaluate")
 def evaluate(tenant_id: str):
 
