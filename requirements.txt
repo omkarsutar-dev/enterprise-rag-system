@@ -11,3 +11,5 @@ pypdf
 python-multipart
 redis
 sentence-transformers
+streamlit
+requests
