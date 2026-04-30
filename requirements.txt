@@ -13,3 +13,6 @@ redis
 sentence-transformers
 streamlit
 requests
+rank_bm25
+langchain
+langchain-text-splitters

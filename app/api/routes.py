@@ -83,10 +83,10 @@ def query(request: QueryRequest):
 
     filters = {}
 
-    if request.department and request.department.lower() not in ["", "all", "none"]:
+    if request.department and request.department.lower() not in ["", "string", "all", "none"]:
         filters["department"] = request.department
 
-    if request.source and request.source.lower() not in ["", "all", "none"]:
+    if request.source and request.source.lower() not in ["", "string", "all", "none"]:
         filters["source"] = request.source
 
     cache_key = generate_cache_key(

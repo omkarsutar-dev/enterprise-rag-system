@@ -1,24 +1,13 @@
 import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
-
 from app.services.embeddings import get_embedding
 from app.services.vector_store import load_index
-
-vectorizer = None
-tfidf_matrix = None
-
-
-def initialize_keyword_search(metadata):
-
-    global vectorizer, tfidf_matrix
-
-    texts = [doc["text"] for doc in metadata]
-
-    vectorizer = TfidfVectorizer()
-    tfidf_matrix = vectorizer.fit_transform(texts)
+from app.services.bm25_service import bm25_search
 
 
 def apply_filters(metadata, filters):
+
+    if not filters:
+        return metadata  # ✅ skip filtering completely
 
     filtered = []
 
@@ -26,11 +15,13 @@ def apply_filters(metadata, filters):
 
         match = True
 
-        if filters.get("department") and doc.get("department") != filters["department"]:
-            match = False
+        if "department" in filters:
+            if doc.get("department") != filters["department"]:
+                match = False
 
-        if filters.get("source") and doc.get("source") != filters["source"]:
-            match = False
+        if "source" in filters:
+            if doc.get("source") != filters["source"]:
+                match = False
 
         if match:
             filtered.append(doc)
@@ -41,36 +32,54 @@ def apply_filters(metadata, filters):
 def hybrid_search(query, tenant_id, filters=None, top_k=20):
 
     index, metadata = load_index(tenant_id)
+    print(f"Metadata chunks{len(metadata)}")
 
     # ✅ Apply filters BEFORE retrieval
     if filters:
         metadata = apply_filters(metadata, filters)
+    
+    print(f"Filters : {filters}")
 
     if not metadata:
         return []
 
-    # Reinitialize keyword search
-    initialize_keyword_search(metadata)
+    for i in metadata :
+        print(f"Filterted chunks{metadata}")
 
-    # Semantic search
+
     query_embedding = get_embedding(query)
+
     D, I = index.search(np.array([query_embedding]), top_k)
 
-    semantic_results = [
-        metadata[i] for i in I[0] if i < len(metadata)
-    ]
+    semantic_results = []
+    for idx in I[0]:
+        if idx < len(metadata):
+            doc = metadata[idx]
+            doc["semantic_score"] = float(D[0][list(I[0]).index(idx)])
+            semantic_results.append(doc)
 
-    # Keyword search
-    query_vec = vectorizer.transform([query])
-    scores = (tfidf_matrix @ query_vec.T).toarray().flatten()
 
-    keyword_indices = scores.argsort()[-top_k:][::-1]
-    keyword_results = [metadata[i] for i in keyword_indices]
+    bm25_results = bm25_search(query, metadata, tenant_id, top_k=top_k)
 
-    # Combine
-    combined = semantic_results + keyword_results
+    combined = semantic_results + bm25_results
 
-    # Remove duplicates
-    unique = {item["text"]: item for item in combined}
+    # Deduplicate (keep best version)
+    unique = {}
+    for doc in combined:
+        key = doc["text"]
 
-    return list(unique.values())[:top_k]
+        if key not in unique:
+            unique[key] = doc
+        else:
+            # keep higher score version
+            existing = unique[key]
+
+            new_score = doc.get("bm25_score", 0) + doc.get("semantic_score", 0)
+            old_score = existing.get("bm25_score", 0) + existing.get("semantic_score", 0)
+
+            if new_score > old_score:
+                unique[key] = doc
+
+    results = list(unique.values())
+
+    return results[:top_k]
