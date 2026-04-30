@@ -34,8 +34,8 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 # -------------------------------
 def dynamic_threshold(query: str):
     if len(query.split()) < 4:
-        return 0.7
-    return 0.6
+        return 0.4
+    return 0.3
 
 
 # -------------------------------

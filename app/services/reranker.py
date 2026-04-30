@@ -1,28 +1,21 @@
 from sentence_transformers import CrossEncoder
-
-# Load model once (global)
 cross_encoder = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
 
 
-def rerank(query, chunks, top_k=5, threshold=0.3):
+def rerank(query, chunks, top_k=5, threshold=0.2):
 
     if not chunks:
         return []
 
-    pairs = [(query, c["text"]) for c in chunks]
-    scores = cross_encoder.predict(pairs)
+    # Assume scores already exist (final_score)
 
-    for i, chunk in enumerate(chunks):
-        chunk["score"] = float(scores[i])
-
-    ranked = sorted(chunks, key=lambda x: x["score"], reverse=True)
+    ranked = sorted(chunks, key=lambda x: x.get("final_score", 0), reverse=True)
 
     # Filter
-    filtered = [c for c in ranked if c["score"] >= threshold]
-    
+    filtered = [c for c in ranked if c.get("final_score", 0) >= threshold]
 
-    # 🔥 IMPORTANT FALLBACK
+    # 🔥 CRITICAL: fallback
     if not filtered:
-        return ranked[:top_k]   # don't return empty
+        return ranked[:top_k]
 
     return filtered[:top_k]

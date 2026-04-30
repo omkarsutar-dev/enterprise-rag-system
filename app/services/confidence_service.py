@@ -1,13 +1,12 @@
 def calculate_confidence(chunks):
 
     if not chunks:
-        return 0
+        return 0.0
+    
+    confidence = sum(c["final_score"] for c in chunks[:3]) / 3
 
-    scores = [c.get("score", 0) for c in chunks]
-
-    return sum(scores) / len(scores)
+    return confidence
 
 
-def is_confident(confidence, threshold=0.6):
-
+def is_confident(confidence, threshold=0.3):   # 🔥 reduce threshold
     return confidence >= threshold
