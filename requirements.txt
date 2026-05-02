@@ -16,3 +16,6 @@ requests
 rank_bm25
 langchain
 langchain-text-splitters
+pytesseract
+pdf2image
+pillow

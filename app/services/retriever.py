@@ -54,7 +54,8 @@ def hybrid_search(query, tenant_id, filters=None, top_k=20):
     for i, idx in enumerate(I[0]):
         if idx < len(metadata):
             doc = metadata[idx]
-            doc["semantic_score"] = float(D[0][i])
+            distance = float(D[0][i])
+            doc["semantic_score"] = 1 / (1 + distance)
             semantic_results.append(doc)
 
     # -------------------------------

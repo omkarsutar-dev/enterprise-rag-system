@@ -97,6 +97,7 @@ def query(request: QueryRequest):
 
     # ✅ Cache check
     cached = get_cached_response(cache_key)
+    # cached = None
     if cached:
         print("It's Cached reponse.")
         return cached
@@ -117,6 +118,9 @@ def query(request: QueryRequest):
     # ✅ Rerank
     reranked = rerank(request.query, chunks, top_k=3)
     print(f"Chunks after rerank: {len(reranked)}")
+    if reranked : 
+        for chunk in reranked:
+            print(chunk)
 
     # ❌ No chunks found
     if not reranked:

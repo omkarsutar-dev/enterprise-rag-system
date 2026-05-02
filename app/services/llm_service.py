@@ -21,7 +21,12 @@ def generate_answer(query, context_chunks, history):
     messages.append({
         "role": "user",
         "content": f"""
-Use the context below to answer:
+Answer based on context.
+
+Rules:
+- If exact answer not found → provide closest relevant info
+- Mention clearly if specific detail is missing
+- Do NOT say "no information" directly
 
 Context:
 {context}
