@@ -1,127 +1,277 @@
-# Enterprise Multi-Tenant RAG Platform
+# Enterprise Adaptive RAG System
 
-A production-style **Retrieval Augmented Generation (RAG) system** that enables organizations to query internal documents using LLMs with **hybrid retrieval, reranking, and dynamic document ingestion**.
-
-This project demonstrates how modern AI systems combine **vector search, keyword search, and cross-encoder reranking** to build scalable enterprise knowledge assistants.
+An enterprise-grade Adaptive Retrieval-Augmented Generation (RAG) system built using FastAPI, FAISS, BM25, OCR, Hybrid Search, Reranking, Confidence Scoring, Feedback Learning, and Streamlit UI.
 
 ---
 
-## 🚀 Key Features
+# 🚀 Features
 
-* **Multi-Tenant Architecture** – isolated knowledge base for each organization
-* **Hybrid Retrieval** – semantic search + keyword search
-* **Cross-Encoder Reranking** – improves document relevance
-* **Dynamic Document Upload** – upload PDFs/TXT via API
-* **Automatic Indexing Pipeline** – chunking → embeddings → vector index update
-* **Vector Search** – FAISS for high-performance similarity search
-* **FastAPI Backend** – scalable AI service layer
-* **Background Tasks** - Asynchronous document ingestion using background tasks
-* **Metadata Filtering** - Metadata-based filtering in the retrieval layer
-* **Redis-based query caching** - Avoid redundant LLM calls, significantly reducing latency and cost for repeated queries.
+## ✅ Multi-Tenant RAG
+- Separate vector indexes per tenant
+- Tenant-specific retrieval pipeline
 
 ---
 
-## 🧠 System Pipeline
+## ✅ OCR-Based Document Processing
+Supports:
+- PDF
+- Scanned PDFs
+- TXT documents
 
-User Upload Document
-↓
-Text Extraction (PDF/TXT)
-↓
-Chunking with Overlap
-↓
-Embedding Generation
-↓
-FAISS Vector Index Update
+Uses OCR + intelligent parsing to extract structured content.
+
+---
+
+## ✅ Advanced Chunking
+- Semantic chunking
+- Section-aware chunking
+- Heading-based parsing
+
+---
+
+## ✅ Hybrid Search
+Combines:
+- Semantic Search (FAISS)
+- Keyword Search (BM25)
+
+for better retrieval quality.
+
+---
+
+## ✅ Score-based Reranking
+Uses:
+- Adaptive weighted reranking to rerank retrieved chunks.
+
+---
+
+## ✅ Confidence + No-Hallucination System
+- Confidence scoring
+- Rejects weak-context answers
+- Prevents hallucinated responses
+
+---
+
+## ✅ Query Expansion
+Improves retrieval using:
+- Synonym expansion
+- LLM-assisted query expansion
+
+---
+
+## ✅ Feedback Learning System
+Adaptive retrieval:
+- Positive feedback boosts chunks
+- Negative feedback reduces ranking
+
+---
+
+## ✅ Streaming Responses
+Supports token streaming for chat-like UX.
+
+---
+
+## ✅ Streamlit Demo UI
+Interactive frontend for:
+- Document upload
+- Chat interface
+- Streaming answers
+- Confidence visualization
+- Source inspection
+
+---
+
+# 🏗️ Architecture
 
 User Query
-↓
-Hybrid Retrieval (Semantic + Keyword)
-↓
-Reranking Model
-↓
-Top Context Chunks
-↓
-LLM Answer Generation
+→ Query Expansion
+→ BM25 + FAISS Retrieval
+→ Cross-Encoder Reranking
+→ Confidence Filtering
+→ LLM Response Generation
+→ Feedback Learning Loop
 
 ---
 
-## 📂 Project Structure
+# 📁 Project Structure
 
 ```
-enterprise-rag/
-
-app/
- ├── api/            # FastAPI routes
- ├── core/           # Tenant management
- ├── models/         # API schemas
- ├── services/       # Retrieval, reranking, ingestion, LLM
- └── utils/          # Chunking and file parsing
-
-uploads/             # Uploaded documents
-data/                # Tenant data
-vector_store/        # FAISS vector indexes
-scripts/             # Index build scripts
+enterprise-rag-system/
+│
+├── app/
+│   ├── api/
+│   ├── core/
+│   ├── services/
+│   ├── utils/
+│   ├── evaluation/
+│   ├── models/
+│
+├── streamlit_app/
+│   ├── app.py
+│   ├── api_client.py
+│   ├── components/
+│   │   ├── sidebar.py
+│   │   ├── uploader.py
+│   │   ├── chat.py
+│
+├── uploads/
+├── vector_store/
+├── requirements.txt
 ```
 
 ---
 
-## ⚙️ Tech Stack
+# ⚙️ Tech Stack
 
-* Python
-* FastAPI
-* FAISS (Vector Database)
-* OpenAI Embeddings
-* Sentence Transformers (Reranker)
-* Scikit-Learn (Keyword Search)
-* PyPDF (Document Parsing)
+## Backend
+- FastAPI
+- Python
+
+## Retrieval
+- FAISS
+- BM25
+- SentenceTransformers
+
+## LLM
+- OpenAI GPT
+
+## OCR
+- pdfplumber
+- pytesseract
+
+## Frontend
+- Streamlit
 
 ---
 
-## ▶️ Running the Project
+# 🔥 Installation
 
-Install dependencies
+## 1. Clone Repository
 
+```bash
+git clone https://github.com/omkarsutar-dev/enterprise-rag-system.git
+cd enterprise-rag-system
 ```
+
+---
+
+## 2. Create Virtual Environment
+
+```bash
+python -m venv venv
+venv\Scripts\activate       # Windows
+source venv/bin/activate    # Linux/Mac
+```
+
+---
+
+## 3. Install Dependencies
+
+```bash
 pip install -r requirements.txt
 ```
+---
 
-Add OpenAI API key
+# 🔑 Environment Variables
 
+Create `.env`
+```bash
+OPENAI_API_KEY=your_openai_key
 ```
-OPENAI_API_KEY=your_api_key
-```
+---
 
-Run the API server
+# 🚀 Run Backend
 
-```
+```bash
 uvicorn app.main:app --reload
 ```
-
-Open API documentation
-
+Backend:
+```bash
+http://127.0.0.1:8000
 ```
-http://localhost:8000/docs
+
+Swagger Docs:
+```bash
+http://127.0.0.1:8000/docs
+```
+---
+
+# 🚀 Run Streamlit UI
+
+```bash
+streamlit run streamlit_app/app.py
+```
+
+UI:
+```bash
+http://localhost:8501
 ```
 
 ---
 
-## 🎯 Use Cases
+# 📤 Upload Documents
 
-* Enterprise knowledge assistants
-* Internal documentation search
-* HR policy Q&A systems
-* AI copilots for organizations
+Supported:
+- TXT
+- PDF
+- Scanned PDFs
+
+Metadata:
+- tenant_id
+- department
 
 ---
 
-## 🔮 Next Improvements
+# 💬 Query Example
 
-* Evaluation metrics
-* Cloud deployment
+{
+  "query": "How many sick leaves are allowed?",
+  "tenant_id": "company_a",
+  "department": "HR",
+  "source": "",
+  "session_id": "session_1"
+}
+
+---
+
+# 📊 Evaluation Metrics
+
+System supports:
+- Precision
+- Recall
+- Exact Match
+- Latency
+
+---
+
+# 🔥 Key Engineering Highlights
+
+- Adaptive Retrieval
+- OCR + Structured Parsing
+- Hybrid Retrieval Architecture
+- Feedback Learning
+- Confidence-Based Hallucination Prevention
+- Streaming AI Responses
+
+---
+
+# 🚀 Future Improvements
+
+- LangChain migration
+- LangGraph workflows
+- Kubernetes deployment
+- Observability dashboard
+- Role-based access control
+- Async indexing pipeline
 
 ---
 
 ## 👨‍💻 Author
 
-Omkar Sutar
-Python Developer →  Generative AI Engineer
+**Omkar Sutar**
+GenAI Engineer
+
+---
+
+## ⭐ If you like this project
+
+Give it a ⭐ on GitHub — it helps a lot!

@@ -20,3 +20,5 @@ pytesseract
 pdf2image
 pillow
 langchain-openai
+streamlit 
+requests
