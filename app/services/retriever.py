@@ -3,8 +3,7 @@ import numpy as np
 from app.services.embeddings import get_embedding
 from app.services.vector_store import load_index
 from app.services.bm25_service import bm25_search
-
-# ✅ NEW
+from app.services.learning_service import get_feedback_score
 from app.services.scoring_service import normalize_scores, combine_scores
 
 
@@ -96,6 +95,13 @@ def hybrid_search(query, tenant_id, filters=None, top_k=20):
     # ✅ Weighted scoring
     # -------------------------------
     results = combine_scores(results, alpha=0.6, beta=0.4)
+
+    # -------------------------------
+    # ✅ Feedback
+    # -------------------------------
+    for doc in results:
+        feedback_score = get_feedback_score(doc["text"])
+        doc["final_score"] += 0.1 * feedback_score
 
     # -------------------------------
     # ✅ Sort by final score

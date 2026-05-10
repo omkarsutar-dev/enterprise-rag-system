@@ -1,8 +1,21 @@
 from openai import OpenAI
 from app.config import OPENAI_API_KEY
 
+from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI(
+    model="gpt-4o-mini",
+    api_key=OPENAI_API_KEY,
+    temperature=0
+)
+
 client = OpenAI(api_key=OPENAI_API_KEY)
 
+def generate_text(prompt):
+
+    response = llm.invoke(prompt)
+
+    return response.content
 
 def generate_answer(query, context_chunks, history):
 

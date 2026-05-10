@@ -19,3 +19,4 @@ langchain-text-splitters
 pytesseract
 pdf2image
 pillow
+langchain-openai

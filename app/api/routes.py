@@ -1,7 +1,7 @@
 from fastapi import APIRouter, UploadFile, File, Form, BackgroundTasks
 import os
 from fastapi.responses import StreamingResponse
-
+from app.services.query_expansion import expand_query
 from app.models.schemas import QueryRequest, QueryResponse, FeedbackRequest
 from app.services.upload_service import process_upload
 from app.services.retriever import hybrid_search
@@ -105,9 +105,12 @@ def query(request: QueryRequest):
     # ✅ Chat history
     history = get_chat_history(request.session_id)
 
+    # Query expansion
+    expanded_query = expand_query(request.query)
+
     # ✅ Retrieval
     chunks = hybrid_search(
-        request.query,
+        expanded_query,
         request.tenant_id,
         filters=filters,
         top_k=20
