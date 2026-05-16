@@ -7,14 +7,32 @@
 
 #     return confidence
 
+# def calculate_confidence(chunks):
+
+#     if not chunks:
+#         return 0.0
+
+#     avg_score = sum(c.get("final_score", 0) for c in chunks) / len(chunks)
+
+#     return avg_score
+
+# def is_confident(confidence, threshold=0.3):   # 🔥 reduce threshold
+#     return confidence >= threshold
+
+
 def calculate_confidence(chunks):
 
     if not chunks:
         return 0.0
 
-    avg_score = sum(c.get("final_score", 0) for c in chunks) / len(chunks)
+    avg_score = sum(
+        c.get("combined_score", 0)
+        for c in chunks
+    ) / len(chunks)
 
     return avg_score
 
-def is_confident(confidence, threshold=0.3):   # 🔥 reduce threshold
+
+def is_confident(confidence, threshold=0.3):
+
     return confidence >= threshold

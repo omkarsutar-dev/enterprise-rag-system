@@ -1,7 +1,9 @@
 from openai import OpenAI
 from app.config import OPENAI_API_KEY
-
 from langchain_openai import ChatOpenAI
+from app.utils.response_cleaner import clean_response
+
+
 
 llm = ChatOpenAI(
     model="gpt-4o-mini",
@@ -40,6 +42,9 @@ Rules:
 - If exact answer not found → provide closest relevant info
 - Mention clearly if specific detail is missing
 - Do NOT say "no information" directly
+- Do not generate LaTeX, markdown equations, or mathematical formatting.
+- Explain formulas in plain English.
+- If a formula exists, explain it step-by-step in simple words.
 
 Context:
 {context}
@@ -54,7 +59,11 @@ Question:
         messages=messages
     )
 
-    return response.choices[0].message.content
+    answer = response.choices[0].message.content
+
+    answer = clean_response(answer)
+
+    return answer
 
 
 def generate_streaming_answer(query, context_chunks, history):
